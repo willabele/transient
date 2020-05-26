@@ -97,6 +97,17 @@ class TransientVm:
     def __current_user(self) -> str:
         return pwd.getpwuid(os.getuid()).pw_name
 
+    def __ssh_shutdown(self):
+        client = ssh.SshClient(config=self.ssh_config, command=self.config.ssh_command)
+        conn = client.connect_piped(15)
+        raw_stdout, raw_stderr = conn.communicate(b'sudo shutdown -h now',
+                timeout=15)
+        returncode = conn.poll()
+        stdout = raw_stdout.decode("utf-8").strip()
+        stderr = raw_stderr.decode("utf-8").strip()
+        print(stdout, stderr)
+
+
     def run(self) -> int:
         # First, download and setup any required disks
         self.vm_images = self.__create_images(self.config.image)
@@ -139,7 +150,9 @@ class TransientVm:
             returncode = self.__connect_ssh()
 
             # Once the ssh connection closes, terminate the VM
-            self.qemu_runner.terminate()
+            self.__ssh_shutdown()
+            # self.qemu_runner.terminate()
+            self.qemu_runner.wait(10)
 
             # Note that for ssh-console, we return the code of the ssh connection,
             # not the qemu process

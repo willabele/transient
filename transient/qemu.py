@@ -140,12 +140,18 @@ class QemuRunner:
         else:
             raise RuntimeError("Attempt to silence QemuRunner that is not silenceable")
 
-    def wait(self) -> int:
+    def wait(self, timeout=None) -> int:
         if self.proc_handle is None:
             raise RuntimeError("QemuRunner cannot wait without being started")
 
         logging.info("Waiting for qemu process to terminate")
-        self.proc_handle.wait()
+        if timeout:
+            try:
+                self.proc_handle.wait(timeout=timeout)
+            except:
+                self.terminate()
+        else:
+            self.proc_handle.wait()
         return self.proc_handle.returncode
 
     def terminate(self) -> None:
