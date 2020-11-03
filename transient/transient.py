@@ -209,8 +209,18 @@ class TransientVm:
         if self.__is_stateless():
             new_args.append("-snapshot")
 
-        for image in self.vm_images:
-            new_args.extend(["-drive", f"file={image.path}"])
+        drive_interface = self.config.drive_interface
+
+        if drive_interface == 'virtio-scsi-pci':
+            new_args.extend(["-device", "virtio-scsi-pci,id=scsi"])
+            for idx, image in enumerate(self.vm_images):
+                new_args.extend(["-drive", f"file={image.path},if=none,id=hd{idx}"])
+                new_args.extend(["-device", f"scsi-hd,drive=hd{idx}"])
+        elif drive_interface == 'ide':
+            for image in self.vm_images:
+                new_args.extend(["-drive", f"file={image.path}"])
+        else:
+            raise RuntimeError(f"Unknown drive interface: {drive_interface}")
 
         if self.__needs_ssh():
             if self.__needs_ssh_console():

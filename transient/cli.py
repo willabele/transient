@@ -164,6 +164,11 @@ def cli_entry(verbose: int) -> None:
     help="The QEMU virtual network device driver e.g. e1000, rtl8139, virtio-net-pci (default)",
 )
 @click.option(
+    "-drive-interface",
+    type=str,
+    help="The QEMU interface to use for attaching images e.g. ide, virtio-scsi-pci (default)",
+)
+@click.option(
     "-shutdown-timeout",
     type=int,
     help="The time to wait for shutdown before terminating QEMU",
